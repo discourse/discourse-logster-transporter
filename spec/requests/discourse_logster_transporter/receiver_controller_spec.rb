@@ -10,7 +10,11 @@ RSpec.describe DiscourseLogsterTransporter::ReceiverController do
       @logs = []
     end
 
-    def add(*args, &block)
+    def store
+      self
+    end
+
+    def report(*args)
       @logs << args
     end
   end
@@ -90,7 +94,10 @@ RSpec.describe DiscourseLogsterTransporter::ReceiverController do
           }, as: :json
 
           expect(response.status).to eq(200)
-          expect(fake_logger.logs).to include([1, 'test', 'test2'], [2, 'test2', 'test3'])
+
+          expect(fake_logger.logs).to include([
+            1, 'test', 'test2', nil], [2, 'test2', 'test3', nil
+          ])
         ensure
           Rails.logger = orig_logger
         end

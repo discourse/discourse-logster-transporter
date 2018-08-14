@@ -18,7 +18,14 @@ module DiscourseLogsterTransporter
     def add(*args, &block)
       severity, message, progname = args
       message = yield if message.nil? && block_given?
-      @buffer.push([severity, message, progname])
+
+      @buffer.push([
+        severity,
+        message,
+        progname,
+        { env: Thread.current[Logster::Logger::LOGSTER_ENV] }
+      ])
+
       start_thread
     end
 

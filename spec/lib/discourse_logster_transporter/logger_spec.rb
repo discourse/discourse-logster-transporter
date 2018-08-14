@@ -12,10 +12,10 @@ RSpec.describe DiscourseLogsterTransporter::Logger do
       logger.add(1, 'test4', 'somename') { 'omg' }
 
       expect(logger.buffer).to eq([
-        [2, nil, 'test'],
-        [3, nil, 'test2'],
-        [2, 'test3', nil],
-        [1, 'test4', 'somename']
+        [2, nil, 'test', { env: nil }],
+        [3, nil, 'test2', { env: nil }],
+        [2, 'test3', nil, { env: nil }],
+        [1, 'test4', 'somename', { env: nil }]
       ])
     end
   end
