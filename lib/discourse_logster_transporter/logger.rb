@@ -35,7 +35,7 @@ module DiscourseLogsterTransporter
 
       request.body = {
         logs: @buffer,
-        key: key
+        key: @key
       }.to_json
 
       http = Net::HTTP.new(uri.hostname, uri.port)
