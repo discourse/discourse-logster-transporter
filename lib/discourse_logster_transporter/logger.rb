@@ -36,7 +36,7 @@ module DiscourseLogsterTransporter
       request.body = {
         logs: @buffer,
         key: @key
-      }.to_json
+      }
 
       http = Net::HTTP.new(uri.hostname, uri.port)
       http.use_ssl = true if uri.scheme == 'https'
