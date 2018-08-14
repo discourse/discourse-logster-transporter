@@ -24,7 +24,7 @@ module DiscourseLogsterTransporter
 
     private
 
-    def post(payload)
+    def post
       uri = URI(@root_url)
       uri.path = PATH
 
@@ -54,9 +54,9 @@ module DiscourseLogsterTransporter
 
           if @buffer.present?
             last_activity = Time.zone.now.to_i
-            response = post(@buffer)
+            response = post
 
-            if response.code.to_i = 200
+            if response.code.to_i == 200
               @buffer.clear
             else
               # TODO: Maybe we should have some form of alert?
