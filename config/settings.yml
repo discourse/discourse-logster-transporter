@@ -1,0 +1,5 @@
+plugins:
+  logster_transporter_key:
+    hidden: true
+    shadowed_by_global: true
+    default: ''

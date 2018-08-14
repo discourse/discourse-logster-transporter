@@ -4,6 +4,12 @@
 # url: https://github.com/discourse/discourse-logster-transporter
 
 after_initialize do
+  [
+    '../lib/ring_buffer.rb',
+    '../lib/discourse_logster_transporter/logger.rb',
+    '../app/controllers/discourse_logster_transporter/receiver_controller.rb',
+  ].each { |path| load File.expand_path(path, __FILE__) }
+
   module ::DiscourseLogsterTransporter
     PLUGIN_NAME = 'discourse-logster-transporter'.freeze
 
@@ -11,5 +17,25 @@ after_initialize do
       engine_name PLUGIN_NAME
       isolate_namespace ::DiscourseLogsterTransporter
     end
+  end
+
+  is_sender = ENV['LOGSTER_TRANSPORTER_ROOL_URL'].present? &&
+    ENV['LOGSTER_TRANSPORTER_KEY'].present?
+
+  if !is_sender || Rails.env.test?
+    ::DiscourseLogsterTransporter::Engine.routes.draw do
+      post "/receive" => "receiver#receive"
+    end
+
+    Discourse::Application.routes.append do
+      mount ::DiscourseLogsterTransporter::Engine, at: "/logster-transport"
+    end
+  end
+
+  if is_sender && Logster.logger
+    Logster.logger.chain(DiscourseLogsterTransporter::Logger.new(
+      root_url: ENV["LOGSTER_TRANSPORTER_ROOL_URL"],
+      key: ENV["LOGSTER_TRANSPORTER_KEY"]
+    ))
   end
 end

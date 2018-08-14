@@ -1,0 +1,3 @@
+en:
+  site_settings:
+    logster_transporter_key: "Secret key that remote DiscourseLogsterTransporter::Logger instances have to use in order to POST logs to the receiver."
