@@ -1,5 +1,10 @@
 module DiscourseLogsterTransporter
   class ReceiverController < ::ApplicationController
+    skip_before_action :check_xhr,
+                       :preload_json,
+                       :verify_authenticity_token,
+                       :redirect_to_login_if_required
+
     def receive
       key = params.require(:key)
 

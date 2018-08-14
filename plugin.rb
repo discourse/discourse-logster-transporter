@@ -28,7 +28,7 @@ after_initialize do
     end
 
     Discourse::Application.routes.append do
-      mount ::DiscourseLogsterTransporter::Engine, at: "/logster-transport"
+      mount ::DiscourseLogsterTransporter::Engine, at: "/discourse-logster-transport"
     end
   end
 

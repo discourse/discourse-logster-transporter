@@ -5,7 +5,7 @@ module DiscourseLogsterTransporter
   class Logger < ::Logger
     attr_reader :buffer
 
-    PATH = '/logster-transport/receive'
+    PATH = '/discourse-logster-transport/receive'
 
     def initialize(root_url:, key:)
       super(nil)
@@ -36,7 +36,7 @@ module DiscourseLogsterTransporter
       request.body = {
         logs: @buffer,
         key: @key
-      }
+      }.to_json
 
       http = Net::HTTP.new(uri.hostname, uri.port)
       http.use_ssl = true if uri.scheme == 'https'
