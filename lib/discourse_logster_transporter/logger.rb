@@ -59,7 +59,8 @@ module DiscourseLogsterTransporter
             if response.code.to_i = 200
               @buffer.clear
             else
-              # TODO: Integrate an alert with https://github.com/discourse/discourse-prometheus
+              # TODO: Maybe we should have some form of alert?
+              Rails.logger.warn("Failed to transport logs to remote instance")
             end
           end
         end
