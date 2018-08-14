@@ -17,7 +17,7 @@ module DiscourseLogsterTransporter
       logs = params.require(:logs)
 
       (logs || []).each do |severity, message, progname|
-        Rails.logger.add(severity, message, progname)
+        Rails.logger.add(severity.to_i, message, progname)
       end
 
       render json: success_json

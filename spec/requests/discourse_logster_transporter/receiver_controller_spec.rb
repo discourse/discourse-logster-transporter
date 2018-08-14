@@ -17,7 +17,7 @@ RSpec.describe DiscourseLogsterTransporter::ReceiverController do
 
   shared_examples 'invalid access' do
     it 'should return the right response' do
-      post "/logster-transport/receive.json", params: {
+      post "/discourse-logster-transport/receive.json", params: {
         logs: [[1, 'test', 'test2']],
         key: key
       }, as: :json
@@ -46,7 +46,7 @@ RSpec.describe DiscourseLogsterTransporter::ReceiverController do
 
       describe 'when key is not present params' do
         it 'returns the right response' do
-          post "/logster-transport/receive.json", params: {
+          post "/discourse-logster-transport/receive.json", params: {
             logs: [[1, 'test', 'test2']]
           }, as: :json
 
@@ -58,7 +58,7 @@ RSpec.describe DiscourseLogsterTransporter::ReceiverController do
         let(:key) { '' }
 
         it 'returns the right response' do
-          post "/logster-transport/receive.json", params: {
+          post "/discourse-logster-transport/receive.json", params: {
             logs: [[1, 'test', 'test2']],
             key: key
           }, as: :json
@@ -69,7 +69,7 @@ RSpec.describe DiscourseLogsterTransporter::ReceiverController do
 
       describe 'when logs is not present in the params' do
         it 'returns the right response' do
-          post "/logster-transport/receive.json", params: {
+          post "/discourse-logster-transport/receive.json", params: {
             key: logster_transporter_key
           }, as: :json
 
@@ -82,15 +82,15 @@ RSpec.describe DiscourseLogsterTransporter::ReceiverController do
           orig_logger = Rails.logger
           fake_logger = FakeLogger.new
           Rails.logger = fake_logger
-          payload = [[1, 'test', 'test2'], [2, 'test2', 'test3']]
+          payload = [[1, 'test', 'test2'], ['2', 'test2', 'test3']]
 
-          post "/logster-transport/receive.json", params: {
+          post "/discourse-logster-transport/receive.json", params: {
             key: logster_transporter_key,
             logs: payload
           }, as: :json
 
           expect(response.status).to eq(200)
-          expect(fake_logger.logs).to eq(payload)
+          expect(fake_logger.logs).to include([1, 'test', 'test2'], [2, 'test2', 'test3'])
         ensure
           Rails.logger = orig_logger
         end
