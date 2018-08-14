@@ -23,7 +23,10 @@ module DiscourseLogsterTransporter
         severity,
         message,
         progname,
-        { env: Thread.current[Logster::Logger::LOGSTER_ENV] }
+        {
+          env: ::Logster::Message.default_env,
+          backtrace: caller.join('\n')
+        }
       ])
 
       start_thread
