@@ -17,6 +17,8 @@ module DiscourseLogsterTransporter
     def report(severity, progname, message, opts = {})
       opts = opts.merge(backtrace: caller.join("\n"))
 
+      return unless severity.to_i >= Logster.store.level.to_i
+
       if opts[:env].blank?
         current_env = Thread.current[::Logster::Logger::LOGSTER_ENV] || {}
         long_hostname = `hostname -f` rescue '<unknown>'

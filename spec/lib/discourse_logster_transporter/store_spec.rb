@@ -5,9 +5,19 @@ RSpec.describe DiscourseLogsterTransporter::Store do
   let(:store) { described_class.new(root_url: root_url, key: '') }
 
   describe '#report' do
+    before do
+      @store_level = Logster.store.level
+      Logster.store.level = 2
+    end
+
+    after do
+      Logster.store.level = @store_level
+    end
+
     it 'should add the right message into the buffer' do
       store.report(2, 'test', 'test', { test: 'testing' })
       store.report(3, 'test2', 'test2')
+      store.report(1, 'test2', 'test2')
 
       expect(store.buffer.length).to eq(2)
 
