@@ -5,11 +5,21 @@ RSpec.describe DiscourseLogsterTransporter::Logger do
   let(:logger) { described_class.new(root_url: root_url, key: '') }
 
   describe '#add' do
+    before do
+      @log_level = Rails.logger.level
+      Rails.logger.level = 1
+    end
+
+    after do
+      Rails.logger.level = @log_level
+    end
+
     it 'should add the right message into the buffer' do
       logger.warn('test')
       logger.error('test2')
       logger.warn { 'test3' }
-      logger.add(1, 'test4', 'somename') { 'omg' }
+      logger.add(2, 'test4', 'somename') { 'omg' }
+      logger.debug('test')
 
       expect(logger.buffer.length).to eq(4)
 

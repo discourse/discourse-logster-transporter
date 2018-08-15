@@ -20,13 +20,15 @@ module DiscourseLogsterTransporter
       message = yield if message.nil? && block_given?
       full_hostname = `hostname -f` rescue '<unknown>'
 
-      @buffer.push({
-        severity: severity,
-        message: message,
-        progname: progname,
-        env: ::Logster::Message.default_env.merge("hostname" => full_hostname),
-        backtrace: caller.join("\n")
-      })
+      if severity.to_i >= Rails.logger.level
+        @buffer.push({
+          severity: severity,
+          message: message,
+          progname: progname,
+          env: ::Logster::Message.default_env.merge("hostname" => full_hostname),
+          backtrace: caller.join("\n")
+        })
+      end
 
       start_thread
     end
