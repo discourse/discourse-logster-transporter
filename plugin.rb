@@ -40,7 +40,7 @@ after_initialize do
       )
     )
 
-    new_logger.level = Logster.store.level
+    new_logger.level = Logster.store.level || Logger::INFO
     Logster.logger.chain(new_logger)
   end
 end

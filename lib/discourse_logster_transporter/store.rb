@@ -8,25 +8,28 @@ module DiscourseLogsterTransporter
     PATH = '/discourse-logster-transport/receive'.freeze
 
     def initialize(root_url:, key:)
-      @buffer = RingBuffer.new(20)
       @root_url = root_url
       @key = key
-      start_thread
     end
 
     def report(severity, progname, message, opts = {})
       opts = opts.merge(backtrace: caller.join("\n"))
 
-      if opts[:env].blank?
-        current_env = Thread.current[::Logster::Logger::LOGSTER_ENV] || {}
-        opts[:env] = ::Logster::Message.populate_from_env(current_env)
-      end
+      current_env =
+        if opts[:env].blank?
+          (Thread.current[::Logster::Logger::LOGSTER_ENV] || {})
+        else
+          opts[:env]
+        end
 
+      opts[:env] = ::Logster::Message.populate_from_env(current_env)
       long_hostname = `hostname -f` rescue '<unknown>'
 
       opts[:env] = opts[:env].merge(
         ::Logster::Message.default_env.merge("hostname" => long_hostname)
       )
+
+      @buffer ||= RingBuffer.new(20)
 
       @buffer.push({
         severity: severity,
@@ -34,6 +37,8 @@ module DiscourseLogsterTransporter
         progname: progname,
         opts: opts
       })
+
+      start_thread
     end
 
     private
@@ -58,14 +63,17 @@ module DiscourseLogsterTransporter
     end
 
     def start_thread
-      return if Rails.env.test?
+      return if @thread&.alive? || Rails.env.test?
 
       @thread = Thread.new do
-        loop do
+        last_activity = Time.zone.now.to_i
+
+        while (Time.zone.now.to_i - last_activity) < 60 do
           begin
             sleep 5
 
             if @buffer.present?
+              last_activity = Time.zone.now
               response = post
 
               if response.code.to_i == 200
