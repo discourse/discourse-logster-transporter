@@ -113,8 +113,8 @@ RSpec.describe DiscourseLogsterTransporter::ReceiverController do
             },
             {
               severity: '3',
-              progname: 'test',
-              message: 'test',
+              progname: 'test3',
+              message: '',
               env: {
                 hostname: 'something',
                 process_id: 1234,
@@ -146,6 +146,11 @@ RSpec.describe DiscourseLogsterTransporter::ReceiverController do
           expect(first_log[3][:env].keys).to contain_exactly(
             "application_version", "hostname", "process_id"
           )
+
+          second_log = fake_logger.logs.last
+
+          expect(second_log[1]).to eq('test3')
+          expect(second_log[2]).to eq('test3')
         ensure
           Rails.logger = orig_logger
         end
