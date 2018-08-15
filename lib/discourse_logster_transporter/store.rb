@@ -73,7 +73,7 @@ module DiscourseLogsterTransporter
             sleep 5
 
             if @buffer.present?
-              last_activity = Time.zone.now
+              last_activity = Time.zone.now.to_i
               response = post
 
               if response.code.to_i == 200
