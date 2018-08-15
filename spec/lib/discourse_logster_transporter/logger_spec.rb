@@ -7,11 +7,14 @@ RSpec.describe DiscourseLogsterTransporter::Logger do
   describe '#add' do
     before do
       @log_level = Rails.logger.level
+      @logster_ignore = Logster.store.ignore
       Rails.logger.level = 1
+      Logster.store.ignore = [/ActionController/]
     end
 
     after do
       Rails.logger.level = @log_level
+      Logster.store.ignore = @logster_ignore
     end
 
     it 'should add the right message into the buffer' do
@@ -20,13 +23,14 @@ RSpec.describe DiscourseLogsterTransporter::Logger do
       logger.warn { 'test3' }
       logger.add(2, 'test4', 'somename') { 'omg' }
       logger.debug('test')
+      logger.error("ActionController")
 
       expect(logger.buffer.length).to eq(4)
 
       first_log = logger.buffer.first
 
       expect(first_log[:severity]).to eq(2)
-      expect(first_log[:message]).to eq(nil)
+      expect(first_log[:message]).to eq('test')
       expect(first_log[:progname]).to eq('test')
       expect(first_log[:backtrace]).to be_present
 

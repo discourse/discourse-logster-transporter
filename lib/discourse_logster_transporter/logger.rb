@@ -18,9 +18,12 @@ module DiscourseLogsterTransporter
     def add(*args, &block)
       severity, message, progname = args
       message = yield if message.nil? && block_given?
+      message = progname if message.nil?
       full_hostname = `hostname -f` rescue '<unknown>'
 
-      if severity.to_i >= Rails.logger.level
+      if severity.to_i >= Rails.logger.level &&
+          !((Logster.store.ignore || []).any? { |pattern| message =~ pattern})
+
         @buffer.push({
           severity: severity,
           message: message,
