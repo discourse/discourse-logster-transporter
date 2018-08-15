@@ -20,11 +20,8 @@ module DiscourseLogsterTransporter
         Rails.logger.store.report(
           log[:severity].to_i,
           log[:progname],
-          log[:message].blank? ? log[:progname] : log[:message],
-          {
-            env: log[:env].permit!.to_h,
-            backtrace: log[:backtrace]
-          }
+          log[:message],
+          log[:opts].permit!.to_h.symbolize_keys
         )
       end
 

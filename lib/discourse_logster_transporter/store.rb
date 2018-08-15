@@ -2,42 +2,27 @@ require 'logger'
 require 'net/http'
 
 module DiscourseLogsterTransporter
-  class Logger < ::Logger
+  class Store
     attr_reader :buffer
 
-    PATH = '/discourse-logster-transport/receive'
+    PATH = '/discourse-logster-transport/receive'.freeze
 
     def initialize(root_url:, key:)
-      super(nil)
       @buffer = RingBuffer.new(20)
       @root_url = root_url
       @key = key
       @thread = nil
     end
 
-    def add(*args, &block)
-      severity, message, progname = args
-      message = yield if message.nil? && block_given?
-      message = progname if message.nil?
-      full_hostname = `hostname -f` rescue '<unknown>'
+    def report(severity, progname, message, opts = {})
+      opts = opts.merge(backtrace: caller.join("\n"))
 
-      if severity.to_i >= Rails.logger.level &&
-          !((Logster.store.ignore || []).any? { |pattern| message =~ pattern})
-
-        current_env = Thread.current[::Logster::Logger::LOGSTER_ENV] || {}
-
-        logster_env = ::Logster::Message.populate_from_env(current_env.merge(
-          ::Logster::Message.default_env.merge("hostname" => full_hostname)
-        ))
-
-        @buffer.push({
-          severity: severity,
-          message: message,
-          progname: progname,
-          env: logster_env,
-          backtrace: caller.join("\n")
-        })
-      end
+      @buffer.push({
+        severity: severity,
+        message: message,
+        progname: progname,
+        opts: opts
+      })
 
       start_thread
     end

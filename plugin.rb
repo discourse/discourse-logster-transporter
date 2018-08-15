@@ -6,7 +6,7 @@
 after_initialize do
   [
     '../lib/ring_buffer.rb',
-    '../lib/discourse_logster_transporter/logger.rb',
+    '../lib/discourse_logster_transporter/store.rb',
     '../app/controllers/discourse_logster_transporter/receiver_controller.rb',
   ].each { |path| load File.expand_path(path, __FILE__) }
 
@@ -33,9 +33,11 @@ after_initialize do
   end
 
   if is_sender && Logster.logger
-    Logster.logger.chain(DiscourseLogsterTransporter::Logger.new(
-      root_url: ENV["LOGSTER_TRANSPORTER_ROOL_URL"],
-      key: ENV["LOGSTER_TRANSPORTER_KEY"]
+    Logster.logger.chain(Logster::Logger.new(
+      DiscourseLogsterTransporter::Store.new(
+        root_url: ENV["LOGSTER_TRANSPORTER_ROOL_URL"],
+        key: ENV["LOGSTER_TRANSPORTER_KEY"]
+      )
     ))
   end
 end

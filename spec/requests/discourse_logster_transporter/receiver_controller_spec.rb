@@ -2,16 +2,11 @@ require 'rails_helper'
 require 'logger'
 
 RSpec.describe DiscourseLogsterTransporter::ReceiverController do
-  class FakeLogger < ::Logger
+  class FakeStore
     attr_reader :logs
 
     def initialize
-      super(nil)
       @logs = []
-    end
-
-    def store
-      self
     end
 
     def report(*args)
@@ -25,12 +20,14 @@ RSpec.describe DiscourseLogsterTransporter::ReceiverController do
         severity: '1',
         progname: 'test',
         message: 'test',
-        env: {
-          hostname: 'something',
-          process_id: 1234,
-          application_version: '2310313'
-        },
-        backtrace: "something\nsomething"
+        opts: {
+          env: {
+            hostname: 'something',
+            process_id: 1234,
+            application_version: '2310313'
+          },
+          backtrace: "something\nsomething"
+        }
       }
     ]
   end
@@ -101,32 +98,36 @@ RSpec.describe DiscourseLogsterTransporter::ReceiverController do
         begin
           logs = [
             {
-              severity: '4',
+              severity: Logger::ERROR.to_s,
               progname: 'test1',
               message: 'test2',
-              env: {
-                hostname: 'something',
-                process_id: 241213,
-                application_version: '1234566'
-              },
-              backtrace: "something\nsomething"
+              opts: {
+                env: {
+                  hostname: 'something',
+                  process_id: 241213,
+                  application_version: '1234566'
+                },
+                backtrace: "something\nsomething"
+              }
             },
             {
-              severity: '3',
+              severity: Logger::WARN.to_s,
               progname: 'test3',
               message: '',
-              env: {
-                hostname: 'something',
-                process_id: 1234,
-                application_version: '2310313'
-              },
-              backtrace: "something\nsomething"
+              opts: {
+                env: {
+                  hostname: 'something',
+                  process_id: 1234,
+                  application_version: '2310313'
+                },
+                backtrace: "something\nsomething"
+              }
             }
           ]
 
           orig_logger = Rails.logger
-          fake_logger = FakeLogger.new
-          Rails.logger = fake_logger
+          fake_store = FakeStore.new
+          Rails.logger = ::Logster::Logger.new(fake_store)
 
           post "/discourse-logster-transport/receive.json", params: {
             key: logster_transporter_key,
@@ -134,11 +135,9 @@ RSpec.describe DiscourseLogsterTransporter::ReceiverController do
           }, as: :json
 
           expect(response.status).to eq(200)
-          expect(fake_logger.logs.length).to eq(2)
 
-          first_log = fake_logger.logs.first
+          first_log = fake_store.logs.find { |log| log[0] == Logger::ERROR }
 
-          expect(first_log[0]).to eq(4)
           expect(first_log[1]).to eq('test1')
           expect(first_log[2]).to eq('test2')
           expect(first_log[3].keys).to contain_exactly(:backtrace, :env)
@@ -147,10 +146,10 @@ RSpec.describe DiscourseLogsterTransporter::ReceiverController do
             "application_version", "hostname", "process_id"
           )
 
-          second_log = fake_logger.logs.last
+          second_log = fake_store.logs.find { |log| log[0] == Logger::WARN }
 
           expect(second_log[1]).to eq('test3')
-          expect(second_log[2]).to eq('test3')
+          expect(second_log[2]).to eq('')
         ensure
           Rails.logger = orig_logger
         end
