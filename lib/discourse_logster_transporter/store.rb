@@ -62,17 +62,21 @@ module DiscourseLogsterTransporter
 
       @thread = Thread.new do
         loop do
-          sleep 5
+          begin
+            sleep 5
 
-          if @buffer.present?
-            response = post
+            if @buffer.present?
+              response = post
 
-            if response.code.to_i == 200
-              @buffer.clear
-            else
-              # TODO: Maybe we should have some form of alert?
-              Rails.logger.warn("Failed to transport logs to remote instance")
+              if response.code.to_i == 200
+                @buffer.clear
+              else
+                # TODO: Maybe we should have some form of alert?
+                Rails.logger.warn("Failed to transport logs to remote instance")
+              end
             end
+          rescue => e
+            Rails.logger.chained.first.error("#{e.class} #{e.message}: #{e.backtrace.join("\n")}")
           end
         end
       end
