@@ -33,11 +33,14 @@ after_initialize do
   end
 
   if is_sender && Logster.logger
-    Logster.logger.chain(Logster::Logger.new(
+    new_logger = Logster::Logger.new(
       DiscourseLogsterTransporter::Store.new(
         root_url: ENV["LOGSTER_TRANSPORTER_ROOL_URL"],
         key: ENV["LOGSTER_TRANSPORTER_KEY"]
       )
-    ))
+    )
+
+    new_logger.level = Logster.store.level
+    Logster.logger.chain(new_logger)
   end
 end
