@@ -19,12 +19,14 @@ module DiscourseLogsterTransporter
 
       if opts[:env].blank?
         current_env = Thread.current[::Logster::Logger::LOGSTER_ENV] || {}
-        long_hostname = `hostname -f` rescue '<unknown>'
-
-        opts[:env] = ::Logster::Message.populate_from_env(current_env.merge(
-          ::Logster::Message.default_env.merge("hostname" => long_hostname)
-        ))
+        opts[:env] = ::Logster::Message.populate_from_env(current_env)
       end
+
+      long_hostname = `hostname -f` rescue '<unknown>'
+
+      opts[:env] = opts[:env].merge(
+        ::Logster::Message.default_env.merge("hostname" => long_hostname)
+      )
 
       @buffer.push({
         severity: severity,
