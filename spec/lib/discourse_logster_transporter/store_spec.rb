@@ -21,7 +21,11 @@ RSpec.describe DiscourseLogsterTransporter::Store do
 
       second_log = store.buffer.last
 
-      expect(second_log[:opts].keys).to contain_exactly(:backtrace)
+      expect(second_log[:opts].keys).to contain_exactly(:backtrace, :env)
+
+      expect(second_log[:opts][:env].keys).to contain_exactly(
+        "application_version", "process_id", "hostname"
+      )
     end
   end
 end

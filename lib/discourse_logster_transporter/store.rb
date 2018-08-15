@@ -17,6 +17,15 @@ module DiscourseLogsterTransporter
     def report(severity, progname, message, opts = {})
       opts = opts.merge(backtrace: caller.join("\n"))
 
+      if opts[:env].blank?
+        current_env = Thread.current[::Logster::Logger::LOGSTER_ENV] || {}
+        long_hostname = `hostname -f` rescue '<unknown>'
+
+        opts[:env] = ::Logster::Message.populate_from_env(current_env.merge(
+          ::Logster::Message.default_env.merge("hostname" => long_hostname)
+        ))
+      end
+
       @buffer.push({
         severity: severity,
         message: message,
