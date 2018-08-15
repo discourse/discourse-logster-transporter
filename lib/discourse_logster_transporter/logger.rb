@@ -24,7 +24,7 @@ module DiscourseLogsterTransporter
         message: message,
         progname: progname,
         env: ::Logster::Message.default_env,
-        backtrace: caller.join('\n')
+        backtrace: caller.join("\n")
       })
 
       start_thread
