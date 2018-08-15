@@ -24,11 +24,17 @@ module DiscourseLogsterTransporter
       if severity.to_i >= Rails.logger.level &&
           !((Logster.store.ignore || []).any? { |pattern| message =~ pattern})
 
+        current_env = Thread.current[::Logster::Logger::LOGSTER_ENV] || {}
+
+        logster_env = ::Logster::Message.populate_from_env(current_env.merge(
+          ::Logster::Message.default_env.merge("hostname" => full_hostname)
+        ))
+
         @buffer.push({
           severity: severity,
           message: message,
           progname: progname,
-          env: ::Logster::Message.default_env.merge("hostname" => full_hostname),
+          env: logster_env,
           backtrace: caller.join("\n")
         })
       end
