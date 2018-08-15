@@ -19,10 +19,26 @@ RSpec.describe DiscourseLogsterTransporter::ReceiverController do
     end
   end
 
+  let(:logs) do
+    [
+      {
+        severity: '1',
+        progname: 'test',
+        message: 'test',
+        env: {
+          hostname: 'something',
+          process_id: 1234,
+          application_version: '2310313'
+        },
+        backtrace: "something\nsomething"
+      }
+    ]
+  end
+
   shared_examples 'invalid access' do
     it 'should return the right response' do
       post "/discourse-logster-transport/receive.json", params: {
-        logs: [[1, 'test', 'test2']],
+        logs: logs,
         key: key
       }, as: :json
 
@@ -51,7 +67,7 @@ RSpec.describe DiscourseLogsterTransporter::ReceiverController do
       describe 'when key is not present params' do
         it 'returns the right response' do
           post "/discourse-logster-transport/receive.json", params: {
-            logs: [[1, 'test', 'test2']]
+            logs: logs
           }, as: :json
 
           expect(response.status).to eq(400)
@@ -63,7 +79,7 @@ RSpec.describe DiscourseLogsterTransporter::ReceiverController do
 
         it 'returns the right response' do
           post "/discourse-logster-transport/receive.json", params: {
-            logs: [[1, 'test', 'test2']],
+            logs: logs,
             key: key
           }, as: :json
 
@@ -83,21 +99,53 @@ RSpec.describe DiscourseLogsterTransporter::ReceiverController do
 
       it "should log the logs correctly" do
         begin
+          logs = [
+            {
+              severity: '4',
+              progname: 'test1',
+              message: 'test2',
+              env: {
+                hostname: 'something',
+                process_id: 241213,
+                application_version: '1234566'
+              },
+              backtrace: "something\nsomething"
+            },
+            {
+              severity: '3',
+              progname: 'test',
+              message: 'test',
+              env: {
+                hostname: 'something',
+                process_id: 1234,
+                application_version: '2310313'
+              },
+              backtrace: "something\nsomething"
+            }
+          ]
+
           orig_logger = Rails.logger
           fake_logger = FakeLogger.new
           Rails.logger = fake_logger
-          payload = [[1, 'test', 'test2'], ['2', 'test2', 'test3']]
 
           post "/discourse-logster-transport/receive.json", params: {
             key: logster_transporter_key,
-            logs: payload
+            logs: logs
           }, as: :json
 
           expect(response.status).to eq(200)
+          expect(fake_logger.logs.length).to eq(2)
 
-          expect(fake_logger.logs).to include([
-            1, 'test', 'test2', nil], [2, 'test2', 'test3', nil
-          ])
+          first_log = fake_logger.logs.first
+
+          expect(first_log[0]).to eq(4)
+          expect(first_log[1]).to eq('test1')
+          expect(first_log[2]).to eq('test2')
+          expect(first_log[3].keys).to contain_exactly(:backtrace, :env)
+
+          expect(first_log[3][:env].keys).to contain_exactly(
+            "application_version", "hostname", "process_id"
+          )
         ensure
           Rails.logger = orig_logger
         end

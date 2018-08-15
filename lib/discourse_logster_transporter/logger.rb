@@ -19,15 +19,13 @@ module DiscourseLogsterTransporter
       severity, message, progname = args
       message = yield if message.nil? && block_given?
 
-      @buffer.push([
-        severity,
-        message,
-        progname,
-        {
-          env: ::Logster::Message.default_env,
-          backtrace: caller.join('\n')
-        }
-      ])
+      @buffer.push({
+        severity: severity,
+        message: message,
+        progname: progname,
+        env: ::Logster::Message.default_env,
+        backtrace: caller.join('\n')
+      })
 
       start_thread
     end

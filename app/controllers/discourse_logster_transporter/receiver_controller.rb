@@ -16,8 +16,16 @@ module DiscourseLogsterTransporter
 
       logs = params.require(:logs)
 
-      (logs || []).each do |severity, message, progname, opts|
-        Rails.logger.store.report(severity.to_i, message, progname, opts)
+      (logs || []).each do |log|
+        Rails.logger.store.report(
+          log[:severity].to_i,
+          log[:progname],
+          log[:message],
+          {
+            env: log[:env].permit!.to_h,
+            backtrace: log[:backtrace]
+          }
+        )
       end
 
       render json: success_json

@@ -15,13 +15,12 @@ RSpec.describe DiscourseLogsterTransporter::Logger do
 
       first_log = logger.buffer.first
 
-      expect(first_log[0]).to eq(2)
-      expect(first_log[1]).to eq(nil)
-      expect(first_log[2]).to eq('test')
+      expect(first_log[:severity]).to eq(2)
+      expect(first_log[:message]).to eq(nil)
+      expect(first_log[:progname]).to eq('test')
+      expect(first_log[:backtrace]).to be_present
 
-      expect(first_log[3].keys).to contain_exactly(:env, :backtrace)
-
-      expect(first_log[3][:env].keys).to contain_exactly(
+      expect(first_log[:env].keys).to contain_exactly(
         "application_version",
         "hostname",
         "process_id"
