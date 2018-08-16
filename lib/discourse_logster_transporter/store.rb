@@ -6,6 +6,9 @@ module DiscourseLogsterTransporter
     attr_reader :buffer
 
     PATH = '/discourse-logster-transport/receive'.freeze
+    BUFFER_SIZE = 20
+    FLUSH_INTERVAL = 5
+    MAX_IDLE = 60
 
     def initialize(root_url:, key:)
       @root_url = root_url
@@ -32,7 +35,7 @@ module DiscourseLogsterTransporter
         ::Logster::Message.default_env.merge("hostname" => long_hostname)
       )
 
-      @buffer ||= RingBuffer.new(20)
+      @buffer ||= RingBuffer.new(BUFFER_SIZE)
 
       @buffer.push({
         severity: severity,
@@ -71,9 +74,9 @@ module DiscourseLogsterTransporter
       @thread = Thread.new do
         last_activity = Time.zone.now.to_i
 
-        while (Time.zone.now.to_i - last_activity) < 60 do
+        while (Time.zone.now.to_i - last_activity) < MAX_IDLE do
           begin
-            sleep 5
+            sleep FLUSH_INTERVAL
 
             if @buffer.present?
               last_activity = Time.zone.now.to_i
