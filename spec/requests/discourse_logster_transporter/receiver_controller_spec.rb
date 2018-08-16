@@ -140,7 +140,7 @@ RSpec.describe DiscourseLogsterTransporter::ReceiverController do
 
           expect(first_log[1]).to eq('test1')
           expect(first_log[2]).to eq('test2')
-          expect(first_log[3].keys).to contain_exactly(:backtrace, :env)
+          expect(first_log[3].keys).to contain_exactly("backtrace", "env")
 
           expect(first_log[3][:env].keys).to contain_exactly(
             "application_version", "hostname", "process_id"

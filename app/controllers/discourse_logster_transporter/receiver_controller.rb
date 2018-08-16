@@ -21,7 +21,7 @@ module DiscourseLogsterTransporter
           log[:severity].to_i,
           log[:progname],
           log[:message],
-          log[:opts].permit!.to_h.symbolize_keys
+          log[:opts].permit!.to_h.with_indifferent_access
         )
       end
 
