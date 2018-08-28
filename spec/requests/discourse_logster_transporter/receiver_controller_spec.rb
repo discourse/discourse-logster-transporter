@@ -17,7 +17,7 @@ RSpec.describe DiscourseLogsterTransporter::ReceiverController do
   let(:logs) do
     [
       {
-        severity: '1',
+        severity: Logger::INFO.to_s,
         progname: 'test',
         message: 'test',
         opts: {
@@ -152,6 +152,72 @@ RSpec.describe DiscourseLogsterTransporter::ReceiverController do
           expect(second_log[2]).to eq('')
         ensure
           Rails.logger = orig_logger
+        end
+      end
+
+      describe 'when logster_transporter_ignore_regexps is configured' do
+        let(:fake_store) { FakeStore.new }
+
+        before do
+          logs << {
+            severity: Logger::ERROR.to_s,
+            progname: 'test',
+            message: 'testing (',
+            opts: {
+              env: {
+                hostname: 'something',
+                process_id: 1234,
+                application_version: '2310313'
+              },
+              backtrace: "something\nsomething"
+            }
+          }
+
+          @orig_logger = Rails.logger
+          Rails.logger = ::Logster::Logger.new(fake_store)
+        end
+
+        after do
+          Rails.logger = @orig_logger
+        end
+
+        describe 'invalid regexp' do
+          before do
+            SiteSetting.logster_transporter_ignore_regexps =
+              "omg|^testing ("
+          end
+
+          it 'should not ignore the log' do
+            post "/discourse-logster-transport/receive.json", params: {
+              key: logster_transporter_key,
+              logs: logs
+            }, as: :json
+
+            expect(response.status).to eq(200)
+            expect(fake_store.logs.last[2]).to eq('testing (')
+          end
+        end
+
+        describe 'valid regexp' do
+          before do
+            SiteSetting.logster_transporter_ignore_regexps =
+              "^testing \\("
+          end
+
+          it 'should ignore the log' do
+            post "/discourse-logster-transport/receive.json", params: {
+              key: logster_transporter_key,
+              logs: logs
+            }, as: :json
+
+            expect(response.status).to eq(200)
+
+            expect(fake_store.logs.find { |log| log[0] == Logger::ERROR })
+              .to eq(nil)
+
+            expect(fake_store.logs.select { |log| log[0] == Logger::INFO }.last[2])
+              .to eq('test')
+          end
         end
       end
     end
