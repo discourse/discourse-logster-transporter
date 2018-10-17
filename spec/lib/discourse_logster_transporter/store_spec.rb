@@ -4,16 +4,16 @@ RSpec.describe DiscourseLogsterTransporter::Store do
   let(:root_url) { 'https://test.somesite.org' }
   let(:store) { described_class.new(root_url: root_url, key: '') }
 
+  before do
+    @logster_ignore = Logster.store.ignore
+    Logster.store.ignore = [/ActionController/]
+  end
+
+  after do
+    Logster.store.ignore = @logster_ignore
+  end
+
   describe '#report' do
-    before do
-      @logster_ignore = Logster.store.ignore
-      Logster.store.ignore = [/ActionController/]
-    end
-
-    after do
-      Logster.store.ignore = @logster_ignore
-    end
-
     it 'should add the right message into the buffer' do
       store.report(Logger::WARN, 'test', 'test', { test: 'testing' })
       store.report(Logger::ERROR, 'test2', 'test2')
@@ -36,6 +36,40 @@ RSpec.describe DiscourseLogsterTransporter::Store do
       expect(second_log[:opts][:env].keys).to contain_exactly(
         "application_version", "process_id", "hostname"
       )
+    end
+  end
+
+  describe '#flush_buffer' do
+    let(:store) do
+      described_class.new(
+        root_url: root_url,
+        key: '',
+        max_flush_per_5_min: 1
+      )
+    end
+
+    before do
+      RateLimiter.enable
+    end
+
+    after do
+      RateLimiter.disable
+      $redis.flushall
+    end
+
+    it 'can rate limit flush rate' do
+      stub_request(:post, "#{root_url}#{described_class::PATH}")
+        .to_return(status: 200, body: "", headers: {})
+
+      store.report(Logger::ERROR, 'test2', 'test2')
+      store.flush_buffer
+
+      expect(store.buffer).to eq([])
+
+      store.report(Logger::ERROR, 'test2', 'test2')
+      store.flush_buffer
+
+      expect(store.buffer.size).to eq(1)
     end
   end
 end

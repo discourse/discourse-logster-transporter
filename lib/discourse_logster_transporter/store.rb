@@ -8,11 +8,16 @@ module DiscourseLogsterTransporter
     PATH = '/discourse-logster-transport/receive'.freeze
     BUFFER_SIZE = 20
     FLUSH_INTERVAL = 5
+    MAX_FLUSHES_PER_5_MIN = 50
     MAX_IDLE = 60
 
-    def initialize(root_url:, key:)
+    def initialize(root_url:,
+                   key:,
+                   max_flush_per_5_min: MAX_FLUSHES_PER_5_MIN)
+
       @root_url = root_url
       @key = key
+      @max_flush_per_5_min = max_flush_per_5_min
     end
 
     def report(severity, progname, message, opts = {})
@@ -47,6 +52,20 @@ module DiscourseLogsterTransporter
       start_thread
     end
 
+    def flush_buffer
+      if @buffer.present? && perform_rate_limit
+        yield if block_given?
+        response = post
+
+        if response.code.to_i == 200
+          @buffer.clear
+        else
+          # TODO: Maybe we should have some form of alert?
+          Rails.logger.warn("Failed to transport logs to remote instance")
+        end
+      end
+    end
+
     private
 
     def post
@@ -68,6 +87,15 @@ module DiscourseLogsterTransporter
       http.request(request)
     end
 
+    def perform_rate_limit
+      RateLimiter.new(
+        nil,
+        "discourse_logster_transporter_#{`hostname`.strip}",
+        @max_flush_per_5_min,
+        600
+      ).performed!(raise_error: false)
+    end
+
     def start_thread
       return if @thread&.alive? || Rails.env.test?
 
@@ -77,20 +105,13 @@ module DiscourseLogsterTransporter
         while (Time.zone.now.to_i - last_activity) < MAX_IDLE do
           begin
             sleep FLUSH_INTERVAL
-
-            if @buffer.present?
-              last_activity = Time.zone.now.to_i
-              response = post
-
-              if response.code.to_i == 200
-                @buffer.clear
-              else
-                # TODO: Maybe we should have some form of alert?
-                Rails.logger.warn("Failed to transport logs to remote instance")
-              end
-            end
+            flush_buffer { last_activity = Time.zone.now.to_i }
           rescue => e
-            Rails.logger.chained.first.error("#{e.class} #{e.message}: #{e.backtrace.join("\n")}")
+            raise e if Rails.env.test?
+
+            Rails.logger.chained.first.error(
+              "#{e.class} #{e.message}: #{e.backtrace.join("\n")}"
+            )
           end
         end
       end
