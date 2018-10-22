@@ -15,7 +15,7 @@ RSpec.describe DiscourseLogsterTransporter::Store do
 
   describe '#report' do
     it 'should add the right message into the buffer' do
-      store.report(Logger::WARN, 'test', 'test', { test: 'testing' })
+      store.report(Logger::WARN, 'test', 'test', test: 'testing')
       store.report(Logger::ERROR, 'test2', 'test2')
       store.report(Logger::ERROR, 'progname', 'ActionController')
 

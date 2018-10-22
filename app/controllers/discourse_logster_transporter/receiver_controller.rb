@@ -32,7 +32,7 @@ module DiscourseLogsterTransporter
 
       (logs || []).each do |log|
         message = log[:message]
-        next if ignores.any? { |pattern| message =~ pattern}
+        next if ignores.any? { |pattern| message =~ pattern }
 
         Rails.logger.store.report(
           log[:severity].to_i,

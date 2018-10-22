@@ -42,12 +42,12 @@ module DiscourseLogsterTransporter
 
       @buffer ||= RingBuffer.new(BUFFER_SIZE)
 
-      @buffer.push({
+      @buffer.push(
         severity: severity,
         message: message,
         progname: progname,
         opts: opts
-      })
+      )
 
       start_thread
     end
