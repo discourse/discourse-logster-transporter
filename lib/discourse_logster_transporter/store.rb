@@ -22,7 +22,7 @@ module DiscourseLogsterTransporter
     end
 
     def report(severity, progname, message, opts = {})
-      opts = opts.merge(backtrace: caller.join("\n"))
+      opts = opts.merge(backtrace: caller.join("\n")) unless opts[:backtrace]
 
       # Avoid sending messages we know we don't want over the network
       return if (Logster.store.ignore || []).any? { |pattern| message =~ pattern }

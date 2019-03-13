@@ -15,7 +15,11 @@ RSpec.describe DiscourseLogsterTransporter::Store do
 
   describe '#report' do
     it 'should add the right message into the buffer' do
-      store.report(Logger::WARN, 'test', 'test', test: 'testing')
+      store.report(Logger::WARN, 'test', 'test',
+        test: 'testing',
+        backtrace: "hello"
+      )
+
       store.report(Logger::ERROR, 'test2', 'test2')
       store.report(Logger::ERROR, 'progname', 'ActionController')
 
@@ -27,7 +31,7 @@ RSpec.describe DiscourseLogsterTransporter::Store do
       expect(first_log[:message]).to eq('test')
       expect(first_log[:progname]).to eq('test')
       expect(first_log[:opts][:test]).to eq('testing')
-      expect(first_log[:opts][:backtrace]).to be_present
+      expect(first_log[:opts][:backtrace]).to eq("hello")
 
       second_log = store.buffer.last
 
