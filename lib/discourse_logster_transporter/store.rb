@@ -18,6 +18,7 @@ module DiscourseLogsterTransporter
       @root_url = root_url
       @key = key
       @max_flush_per_5_min = max_flush_per_5_min
+      @mutex = Mutex.new
     end
 
     def report(severity, progname, message, opts = {})
@@ -49,7 +50,7 @@ module DiscourseLogsterTransporter
         opts: opts
       )
 
-      start_thread
+      @mutex.synchronize { start_thread }
     end
 
     def flush_buffer
