@@ -16,23 +16,8 @@ module DiscourseLogsterTransporter
 
       logs = params.require(:logs)
 
-      ignores = SiteSetting.logster_transporter_ignore_regexps
-        .split("|")
-        .map do |regexp|
-
-        begin
-          Regexp.new(regexp)
-        rescue RegexpError => e
-          Rails.logger.warn("Invalid Regexp #{e.message}: #{e.backtrace.join("\n")}")
-          nil
-        end
-      end
-
-      ignores.compact!
-
       (logs || []).each do |log|
         message = log[:message]
-        next if ignores.any? { |pattern| message =~ pattern }
 
         Rails.logger.store.report(
           log[:severity].to_i,
