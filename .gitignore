@@ -50,3 +50,5 @@ build-iPhoneSimulator/
 .rvmrc
 
 .rubocop-https---raw-githubusercontent-com-discourse-discourse-master--rubocop-yml
+*.swp
+*.swo

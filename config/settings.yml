@@ -3,7 +3,3 @@ plugins:
     hidden: true
     shadowed_by_global: true
     default: ''
-  logster_transporter_ignore_regexps:
-    type: 'list'
-    default: ''
-    client: true

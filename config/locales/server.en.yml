@@ -1,4 +1,3 @@
 en:
   site_settings:
     logster_transporter_key: "Secret key that remote DiscourseLogsterTransporter::Logger instances have to use in order to POST logs to the receiver."
-    logster_transporter_ignore_regexps: "Logs with messages that match the regular expressions will not be reported to the store."
