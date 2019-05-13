@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class RingBuffer < ::Array
   def initialize(max_size)
     @max_size = max_size.to_i

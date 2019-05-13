@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module DiscourseLogsterTransporter
   class ReceiverController < ::ApplicationController
     skip_before_action :check_xhr,

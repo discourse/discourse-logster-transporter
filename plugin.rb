@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # name: discourse-logster-transporter
 # about: Chains a transport logger to Logster to allow logs to be transported to a remote Discourse instance.
 # version: 0.0.1
