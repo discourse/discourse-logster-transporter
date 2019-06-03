@@ -21,7 +21,7 @@ after_initialize do
     end
   end
 
-  is_sender = ENV['LOGSTER_TRANSPORTER_ROOL_URL'].present? &&
+  is_sender = ENV['LOGSTER_TRANSPORTER_ROOT_URL'].present? &&
     ENV['LOGSTER_TRANSPORTER_KEY'].present?
 
   if !is_sender || Rails.env.test?
@@ -37,7 +37,7 @@ after_initialize do
   if is_sender && Logster.logger
     new_logger = Logster::Logger.new(
       DiscourseLogsterTransporter::Store.new(
-        root_url: ENV["LOGSTER_TRANSPORTER_ROOL_URL"],
+        root_url: ENV["LOGSTER_TRANSPORTER_ROOT_URL"],
         key: ENV["LOGSTER_TRANSPORTER_KEY"]
       )
     )
