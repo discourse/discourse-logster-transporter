@@ -2,7 +2,7 @@
 
 # name: discourse-logster-transporter
 # about: Chains a transport logger to Logster to allow logs to be transported to a remote Discourse instance.
-# version: 0.0.1
+# version: 1.0.0
 # url: https://github.com/discourse/discourse-logster-transporter
 
 after_initialize do
