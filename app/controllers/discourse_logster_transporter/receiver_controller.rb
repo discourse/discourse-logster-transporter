@@ -11,7 +11,10 @@ module DiscourseLogsterTransporter
       key = params.require(:key)
 
       if SiteSetting.logster_transporter_key.blank? ||
-          key != SiteSetting.logster_transporter_key
+          !ActiveSupport::SecurityUtils.secure_compare(
+            key,
+            SiteSetting.logster_transporter_key
+          )
 
         raise Discourse::InvalidAccess
       end
