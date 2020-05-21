@@ -70,7 +70,7 @@ module DiscourseLogsterTransporter
           @buffer.clear
         else
           # TODO: Maybe we should have some form of alert?
-          Rails.logger.warn("Failed to transport logs to remote instance")
+          Rails.logger.warn("#{response.code}: Failed to transport logs to remote instance")
         end
       end
     end
@@ -118,7 +118,7 @@ module DiscourseLogsterTransporter
           rescue => e
             raise e if Rails.env.test?
 
-            Rails.logger.chained.first.error(
+            Rails.logger.error(
               "#{e.class} #{e.message}: #{e.backtrace.join("\n")}"
             )
           end
