@@ -34,6 +34,7 @@ RSpec.describe DiscourseLogsterTransporter::Store do
       expect(first_log[:progname]).to eq('test')
       expect(first_log[:opts][:test]).to eq('testing')
       expect(first_log[:opts][:backtrace]).to eq("hello")
+      expect(first_log[:opts][:env]["hostname"]).to eq(Socket.gethostname)
 
       second_log = store.buffer.last
 

@@ -2,6 +2,7 @@
 
 require 'logger'
 require 'net/http'
+require 'socket'
 
 module DiscourseLogsterTransporter
   class Store
@@ -21,6 +22,12 @@ module DiscourseLogsterTransporter
       @key = key
       @max_flush_per_5_min = max_flush_per_5_min
       @mutex = Mutex.new
+
+      @hostname = begin
+        Socket.gethostname
+      rescue
+        `hostname -f`
+      end
     end
 
     def report(severity, progname, message, opts = {})
@@ -37,10 +44,9 @@ module DiscourseLogsterTransporter
         end
 
       opts[:env] = ::Logster::Message.populate_from_env(current_env)
-      long_hostname = `hostname -f` rescue '<unknown>'
 
       opts[:env] = opts[:env].merge(
-        ::Logster::Message.default_env.merge("hostname" => long_hostname)
+        ::Logster::Message.default_env.merge("hostname" => @hostname)
       )
 
       @buffer ||= RingBuffer.new(BUFFER_SIZE)
