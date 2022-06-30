@@ -10,6 +10,8 @@ Discourse instance over to another Discourse instance via HTTP.
 On the instance that is meant to receive the logs, simply [install the plugin](https://meta.discourse.org/t/install-plugins-in-discourse/19157)
 and configure a secret key by running `rails runner 'SiteSetting.logster_transporter_key = SecureRandom.hex'`.
 
+Alternatively, the site setting can be set via an ENV: `DISCOURSE_LOGSTER_TRANSPORTER_KEY`.
+
 ### Sender
 
 On the instance that you want to ship logs from, you'll have to first [install the plugin](<(https://meta.discourse.org/t/install-plugins-in-discourse/19157)>).
