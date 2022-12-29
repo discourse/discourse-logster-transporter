@@ -1,33 +1,31 @@
 # frozen_string_literal: true
 
-require 'logger'
-require 'net/http'
-require 'socket'
+require "logger"
+require "net/http"
+require "socket"
 
 module DiscourseLogsterTransporter
   class Store
     attr_reader :buffer
 
-    PATH = '/discourse-logster-transport/receive'.freeze
+    PATH = "/discourse-logster-transport/receive".freeze
     BUFFER_SIZE = 20
     FLUSH_INTERVAL = 5
     MAX_FLUSHES_PER_5_MIN = 50
     MAX_IDLE = 60
 
-    def initialize(root_url:,
-                   key:,
-                   max_flush_per_5_min: MAX_FLUSHES_PER_5_MIN)
-
+    def initialize(root_url:, key:, max_flush_per_5_min: MAX_FLUSHES_PER_5_MIN)
       @root_url = root_url
       @key = key
       @max_flush_per_5_min = max_flush_per_5_min
       @mutex = Mutex.new
 
-      @hostname = begin
-        Socket.gethostname
-      rescue
-        `hostname -f`
-      end
+      @hostname =
+        begin
+          Socket.gethostname
+        rescue StandardError
+          `hostname -f`
+        end
     end
 
     def report(severity, progname, message, opts = {})
@@ -37,26 +35,15 @@ module DiscourseLogsterTransporter
       return if (Logster.store.ignore || []).any? { |pattern| message =~ pattern }
 
       current_env =
-        if opts[:env].blank?
-          (Thread.current[::Logster::Logger::LOGSTER_ENV] || {})
-        else
-          opts[:env]
-        end
+        (opts[:env].blank? ? (Thread.current[::Logster::Logger::LOGSTER_ENV] || {}) : opts[:env])
 
       opts[:env] = ::Logster::Message.populate_from_env(current_env)
 
-      opts[:env] = opts[:env].merge(
-        ::Logster::Message.default_env.merge("hostname" => @hostname)
-      )
+      opts[:env] = opts[:env].merge(::Logster::Message.default_env.merge("hostname" => @hostname))
 
       @buffer ||= RingBuffer.new(BUFFER_SIZE)
 
-      @buffer.push(
-        severity: severity,
-        message: message,
-        progname: progname,
-        opts: opts
-      )
+      @buffer.push(severity: severity, message: message, progname: progname, opts: opts)
 
       @mutex.synchronize { start_thread }
     end
@@ -81,18 +68,12 @@ module DiscourseLogsterTransporter
       uri = URI(@root_url)
       uri.path = PATH
 
-      request = Net::HTTP::Post.new(
-        uri,
-        'Content-Type' => 'application/json'
-      )
+      request = Net::HTTP::Post.new(uri, "Content-Type" => "application/json")
 
-      request.body = {
-        logs: @buffer,
-        key: @key
-      }.to_json
+      request.body = { logs: @buffer, key: @key }.to_json
 
       http = Net::HTTP.new(uri.hostname, uri.port)
-      http.use_ssl = true if uri.scheme == 'https'
+      http.use_ssl = true if uri.scheme == "https"
       http.request(request)
     end
 
@@ -101,29 +82,28 @@ module DiscourseLogsterTransporter
         nil,
         "discourse_logster_transporter_#{`hostname`.strip}",
         @max_flush_per_5_min,
-        600
+        600,
       ).performed!(raise_error: false)
     end
 
     def start_thread
       return if @thread&.alive? || Rails.env.test?
 
-      @thread = Thread.new do
-        last_activity = Time.zone.now.to_i
+      @thread =
+        Thread.new do
+          last_activity = Time.zone.now.to_i
 
-        while (Time.zone.now.to_i - last_activity) < MAX_IDLE do
-          begin
-            sleep FLUSH_INTERVAL
-            flush_buffer { last_activity = Time.zone.now.to_i }
-          rescue => e
-            raise e if Rails.env.test?
+          while (Time.zone.now.to_i - last_activity) < MAX_IDLE
+            begin
+              sleep FLUSH_INTERVAL
+              flush_buffer { last_activity = Time.zone.now.to_i }
+            rescue => e
+              raise e if Rails.env.test?
 
-            Rails.logger.error(
-              "#{e.class} #{e.message}: #{e.backtrace.join("\n")}"
-            )
+              Rails.logger.error("#{e.class} #{e.message}: #{e.backtrace.join("\n")}")
+            end
           end
         end
-      end
 
       @thread.report_on_exception = true
       @thread

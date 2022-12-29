@@ -14,5 +14,5 @@ class RingBuffer < ::Array
     end
   end
 
-  alias :push :<<
+  alias push <<
 end
