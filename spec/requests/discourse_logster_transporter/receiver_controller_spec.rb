@@ -137,22 +137,37 @@ RSpec.describe DiscourseLogsterTransporter::ReceiverController do
 
           expect(response.status).to eq(200)
 
-          first_log = fake_store.logs.find { |log| log[0] == Logger::ERROR }
-
-          expect(first_log[1]).to eq("test1")
-          expect(first_log[2]).to eq("test2")
-          expect(first_log[3].keys).to contain_exactly("backtrace", "env")
-
-          expect(first_log[3][:env].keys).to contain_exactly(
-            "application_version",
-            "hostname",
-            "process_id",
+          expect(fake_store.logs).to include(
+            [
+              Logger::ERROR,
+              "test1",
+              "test2",
+              {
+                "env" => {
+                  "hostname" => "something",
+                  "process_id" => 241_213,
+                  "application_version" => "1234566",
+                },
+                "backtrace" => "something\nsomething",
+              },
+            ],
           )
 
-          second_log = fake_store.logs.find { |log| log[0] == Logger::WARN }
-
-          expect(second_log[1]).to eq("test3")
-          expect(second_log[2]).to eq("")
+          expect(fake_store.logs).to include(
+            [
+              Logger::WARN,
+              "test3",
+              "",
+              {
+                "env" => {
+                  "hostname" => "something",
+                  "process_id" => 1234,
+                  "application_version" => "2310313",
+                },
+                "backtrace" => "something\nsomething",
+              },
+            ],
+          )
         ensure
           Rails.logger = orig_logger
         end
