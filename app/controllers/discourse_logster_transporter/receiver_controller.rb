@@ -2,6 +2,8 @@
 
 module DiscourseLogsterTransporter
   class ReceiverController < ::ApplicationController
+    requires_plugin ::DiscourseLogsterTransporter::PLUGIN_NAME
+
     skip_before_action :check_xhr,
                        :preload_json,
                        :verify_authenticity_token,

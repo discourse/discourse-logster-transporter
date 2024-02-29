@@ -6,12 +6,6 @@
 # url: https://github.com/discourse/discourse-logster-transporter
 
 after_initialize do
-  %w[
-    ../lib/ring_buffer.rb
-    ../lib/discourse_logster_transporter/store.rb
-    ../app/controllers/discourse_logster_transporter/receiver_controller.rb
-  ].each { |path| load File.expand_path(path, __FILE__) }
-
   module ::DiscourseLogsterTransporter
     PLUGIN_NAME = "discourse-logster-transporter".freeze
 
@@ -20,6 +14,10 @@ after_initialize do
       isolate_namespace ::DiscourseLogsterTransporter
     end
   end
+
+  require_relative "lib/ring_buffer"
+  require_relative "lib/discourse_logster_transporter/store"
+  require_relative "app/controllers/discourse_logster_transporter/receiver_controller"
 
   is_sender =
     ENV["LOGSTER_TRANSPORTER_ROOT_URL"].present? && ENV["LOGSTER_TRANSPORTER_KEY"].present?
