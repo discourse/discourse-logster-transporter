@@ -124,9 +124,9 @@ RSpec.describe DiscourseLogsterTransporter::ReceiverController do
             },
           ]
 
-          orig_logger = Rails.logger
           fake_store = FakeStore.new
-          Rails.logger = ::Logster::Logger.new(fake_store)
+          fake_logger = ::Logster::Logger.new(fake_store)
+          Rails.logger.broadcast_to(fake_logger)
 
           post "/discourse-logster-transport/receive.json",
                params: {
@@ -169,7 +169,7 @@ RSpec.describe DiscourseLogsterTransporter::ReceiverController do
             ],
           )
         ensure
-          Rails.logger = orig_logger
+          Rails.logger.stop_broadcasting_to(fake_logger)
         end
       end
     end
