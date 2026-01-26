@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "rails_helper"
-
 RSpec.describe DiscourseLogsterTransporter::Store do
   let(:root_url) { "https://test.somesite.org" }
   let(:store) { described_class.new(root_url: root_url, key: "") }

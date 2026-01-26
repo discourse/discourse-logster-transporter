@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "rails_helper"
-
 RSpec.describe RingBuffer do
   it "should work correctly" do
     buffer = RingBuffer.new(3)
